@@ -79,14 +79,14 @@ module "jitsi" {
 
   aws_region = "eu-central-1"
 
-  name                 = "jitsi-meet"
-  host = "meet"
-  domain              = "example.com" # should match public and private hosted zone
+  name   = "jitsi-meet"
+  host   = "meet"
+  domain = "example.com" # should match public and private hosted zone
   # will result in FQDN => meet.example.com
 
   ec2_instance_type = "t3a.large"
   vpc_id            = "vpc-123"
-  public_subnet_ids    = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
+  public_subnet_ids = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
   
   # If the Route53 zones are in a different AWS Account:
   enable_cross_account = "1"
@@ -113,21 +113,21 @@ module "jitsi" {
 
 ```
 module "jitsi" {
-  source  = "hajowieland/jitsi/aws"
-  version = "1.0.0"
+  source     = "hajowieland/jitsi/aws"
+  version    = "1.0.0"
 
   aws_region = "eu-west-1"
 
-  name                 = "jitsi-meet"
-  host = "meet"
-  domain              = "example.com" # should match public and private hosted zone
+  name   = "jitsi-meet"
+  host   = "meet"
+  domain = "example.com" # should match public and private hosted zone
   # will result in FQDN => meet.example.com
 
-  db_driver = "postgresql" # Set this for Postgres
+  db_driver  = "postgresql" # Set this for Postgres
 
   ec2_instance_type = "t3a.medium"
   vpc_id            = "vpc-123"
-  public_subnet_ids    = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
+  public_subnet_ids = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
   
   public_zone_id  = "Z0819publiczone"
   private_zone_id = "Z134rivatezone
