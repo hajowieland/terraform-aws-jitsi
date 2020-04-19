@@ -5,7 +5,9 @@ This repository contains Terraform code to create an Jitsi Meet instance on AWS 
 <div align="center">
 <img src=https://i.imgur.com/tmgNxtN.png" width="200" height="200">
 <p><strong>Terraform Module:</strong></p>
-<p></p>https://registry.terraform.io/modules/hajowieland/aws/jitsi/</p>
+<p>https://registry.terraform.io/modules/hajowieland/aws/jitsi/</p>
+<p><strong>Blog Post:</strong></p>
+<p>https://napo.io/posts/jitsi-on-aws-with-terraform/</p>
 </div>
 
 
