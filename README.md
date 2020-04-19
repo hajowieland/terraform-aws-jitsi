@@ -18,8 +18,8 @@ This repository contains Terraform code to create an Jitsi Meet instance on AWS 
 - [Prerequisites](#prerequisites)
 - [Features](#features)
 - [Usage](#usage)
-  - [MySQL](#mysql-with-cross-account)
-  - [PostgreSQL](#postgresql-with-one-account)
+  - [Cross-Account](#mysql-with-cross-account)
+  - [Single-Account](#mysql-with-one-account)
   - [Add authenticated Users](#add-authenticated-users)
 - [Notes](#notes)
 - [Links](#links)
@@ -68,8 +68,6 @@ You need the following before deploying this Terraform module:
 
 ### MySQL with cross-account
 
-✔ MySQL
-
 ✔ Cross-account for Route53 records
 
 ✔ Allow additional CIDRs (+ your workstation's IPV4 CIDR) for SSH access
@@ -107,9 +105,7 @@ module "jitsi" {
 }
 ```
 
-### PostgreSQL with one account
-
-✔ PostgreSQL
+### MySQL with one account
 
 ✔ Cross-account for Route53 records
 
