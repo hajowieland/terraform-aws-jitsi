@@ -101,8 +101,8 @@ module "jitsi" {
 
   # If you want to allow other SSH IPv4 CIDRs (in addition to your workstation's IPV4 address):
   ssh_cidrs = {
-    "127.0.0.1/32"  = "first-ip-to-allow",
-    "127.0.0.2/32"  = "second-ip-to-allow"
+    "first-ip-to-allow"  = "127.0.0.1/32",
+    "second-ip-to-allow" = "127.0.0.2/32"
   }
 }
 ```
