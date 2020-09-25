@@ -243,6 +243,10 @@ EOT
   echo "org.jitsi.jicofo.auth.URL=XMPP:$HOSTNAME" >> /etc/jitsi/jicofo/sip-communicator.properties
 }
 
+function add_user() {
+  prosodyctl register ${prosody_user} $HOSTNAME ${prosody_password}
+}
+
 function configure_nginx() {
   cp /usr/share/jitsi-meet/interface_config.js /etc/jitsi/meet/$HOSTNAME-interface_config.js
   sed -i "s|^}|\    location ^~ /etherpad/ {\n        proxy_pass http://localhost:9001/;\n        proxy_set_header X-Forwarded-For \$remote_addr;\n        proxy_buffering off;\n        proxy_set_header       Host \$host;\n    }\n}|g" /etc/nginx/sites-enabled/$HOSTNAME.conf
@@ -251,6 +255,12 @@ function configure_nginx() {
 
 function configure_meet() {
   sed -i "/makeJsonParserHappy.*/i\    etherpad_base: 'https://$HOSTNAME/etherpad/p/'", /etc/jitsi/meet/$HOSTNAME-config.js
+  sed -i "/defaultLanguage/c\    defaultLanguage: '${default_language}'", /etc/jitsi/meet/$HOSTNAME-config.js
+  sed -i "/enableWelcomePage/c\    enableWelcomePage: ${enable_welcome_page}," /etc/jitsi/meet/$HOSTNAME-config.js
+
+  sed -i "/DEFAULT_BACKGROUND/c\    DEFAULT_BACKGROUND: '${default_background_color}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
+  sed -i "/DEFAULT_LOGO_URL/c\    DEFAULT_LOGO_URL: '${watermark_url}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
+  sed -i "/LANG_DETECTION/c\    LANG_DETECTION: ${language_detection}," /etc/jitsi/meet/$HOSTNAME-interface_config.js
 }
 
 function create_awscli_conf() {
@@ -388,6 +398,7 @@ install_jitsi
 configure_prosody
 restart_services
 letsencrypt
+add_user
 configure_authentication
 configure_nginx
 configure_meet

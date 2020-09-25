@@ -135,7 +135,46 @@ variable "deletion_protection" {
   default     = false
 }
 
+# --------------------------------------------------------------------------
+# Jitsi
+# --------------------------------------------------------------------------
+variable "jitsi_admin_username" {
+  description = "The name of prodosy/Jitsi user who can start meetings"
+  type        = string
+}
 
+variable "jitsi_admin_password" {
+  description = "The password of prodosy/Jitsi user who can start meetings"
+  type        = string
+}
+
+variable "enable_welcome_page" {
+  description = "Whether the UI for starting a new meeting should be shown or whether a random room should be opened"
+  type        = bool
+}
+
+variable "default_language" {
+  description = "Default language of the UI"
+  type        = string
+  default     = "en"
+}
+
+variable "default_background_color" {
+  description = "Background color for Jitsi installation"
+  type        = string
+  default     = "#474747"
+}
+
+variable "watermark_url" {
+  description = "URL of the watermark in the top left corner"
+  type        = string
+  default     = "images/watermark.png"
+}
+
+variable "language_detection" {
+  type    = bool
+  default = true
+}
 # --------------------------------------------------------------------------
 # EC2
 # --------------------------------------------------------------------------
