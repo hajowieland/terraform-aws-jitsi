@@ -398,7 +398,6 @@ install_jitsi
 configure_prosody
 restart_services
 letsencrypt
-add_user
 configure_authentication
 configure_nginx
 configure_meet
@@ -406,5 +405,6 @@ restart_services
 sleep 5
 create_mysql_client_config
 convert_datastores
+add_user
 restart_services
 # END
