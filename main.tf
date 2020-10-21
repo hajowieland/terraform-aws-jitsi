@@ -35,16 +35,6 @@ data "aws_subnet" "subnet" {
 }
 
 # --------------------------------------------------------------------------
-# OPTIONAL: Get workstation IPv4
-# --------------------------------------------------------------------------
-data "http" "workstation_external_ip" {
-  count = var.allow_workstation_ipv4 == true ? 1 : 0
-
-  url = "http://ipv4.icanhazip.com"
-}
-
-
-# --------------------------------------------------------------------------
 # Locals
 # --------------------------------------------------------------------------
 locals {
@@ -62,7 +52,6 @@ locals {
     }, { propagate_at_launch = "true" })
   ])
   account_id                = var.aws_account_id == "" ? data.aws_caller_identity.current.account_id : var.aws_account_id
-  workstation_external_cidr = "${chomp(data.http.workstation_external_ip[0].body)}/32"
 }
 
 
@@ -142,18 +131,6 @@ resource "aws_security_group_rule" "ssh" {
   to_port           = 22
   protocol          = "tcp"
   cidr_blocks       = [each.value]
-  security_group_id = aws_security_group.jitsi.id
-}
-
-resource "aws_security_group_rule" "ssh_workstation" {
-  count = var.allow_workstation_ipv4 == true ? 1 : 0
-
-  description       = "SSH: Workstation IPv4"
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = [local.workstation_external_cidr]
   security_group_id = aws_security_group.jitsi.id
 }
 

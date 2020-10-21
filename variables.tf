@@ -254,12 +254,6 @@ variable "private_zone_id" {
 # --------------------------------------------------------------------------
 # SecurityGroup & Key Pair
 # --------------------------------------------------------------------------
-variable "allow_workstation_ipv4" {
-  description = "Enable / Disable to allow workstation IPv4 address to be allowed in SecurityGroup for SSH access"
-  type        = bool
-  default     = true
-}
-
 variable "key_pair_name" {
   description = "Name of pre-existing AWS Key Pair name to associate with Jitsi"
   type        = string
