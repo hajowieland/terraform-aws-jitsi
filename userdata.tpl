@@ -263,6 +263,15 @@ function configure_meet() {
   sed -i "/LANG_DETECTION/c\    LANG_DETECTION: ${language_detection}," /etc/jitsi/meet/$HOSTNAME-interface_config.js
 }
 
+function configure_videobridge_stats() {
+  # this makes the stats call available to clients outside this machine
+  # make sure that you configure the security groups correctly
+  sed -i "/JVB_OPTS/c\JVB_OPTS=\"--apis=rest,xmpp\"" /etc/jitsi/videobridge/config
+  echo "org.jitsi.videobridge.ENABLE_STATISTICS=true" >> /etc/jitsi/videobridge/sip-communicator.properties
+  echo "org.jitsi.videobridge.STATISTICS_TRANSPORT=muc,colibri" >> /etc/jitsi/videobridge/sip-communicator.properties
+  echo "org.jitsi.videobridge.rest.private.jetty.host=${host}.${domain}" >> /etc/jitsi/videobridge/sip-communicator.properties
+}
+
 function create_awscli_conf() {
   echo "Creating awscli.conf for CloudWatch Agent"
   mkdir -p /etc/awslogs
@@ -401,6 +410,7 @@ letsencrypt
 configure_authentication
 configure_nginx
 configure_meet
+configure_videobridge_stats
 restart_services
 sleep 5
 create_mysql_client_config
