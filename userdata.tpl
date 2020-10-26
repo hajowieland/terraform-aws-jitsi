@@ -257,6 +257,8 @@ function configure_meet() {
   sed -i "/makeJsonParserHappy.*/i\    etherpad_base: 'https://$HOSTNAME/etherpad/p/'", /etc/jitsi/meet/$HOSTNAME-config.js
   sed -i "/defaultLanguage/c\    defaultLanguage: '${default_language}'", /etc/jitsi/meet/$HOSTNAME-config.js
   sed -i "/enableWelcomePage/c\    enableWelcomePage: ${enable_welcome_page}," /etc/jitsi/meet/$HOSTNAME-config.js
+  # enable layer suspension to bring down client CPU usage: https://github.com/jitsi/jitsi-meet/issues/5464#issuecomment-698996303
+  sed -i "/enableLayerSuspension/c\    enableLayerSuspension: true," /etc/jitsi/meet/$HOSTNAME-config.js
 
   sed -i "/DEFAULT_BACKGROUND/c\    DEFAULT_BACKGROUND: '${default_background_color}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
   sed -i "/DEFAULT_LOGO_URL/c\    DEFAULT_LOGO_URL: '${watermark_url}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
