@@ -44,7 +44,7 @@ resource "aws_security_group" "aurora" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"] #tfsec:ignore:AWS009
   }
 
   tags = local.tags

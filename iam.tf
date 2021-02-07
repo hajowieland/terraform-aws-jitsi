@@ -123,7 +123,7 @@ resource "aws_iam_role_policy_attachment" "attach_assume" {
 # OPTIONAL: DLM Lifecycle Manager Policy for automatic EBS Snapshots
 # --------------------------------------------------------------------------
 # Trust Relationship
-data aws_iam_policy_document "dlm_tr" {
+data "aws_iam_policy_document" "dlm_tr" {
   count = var.enable_dlm == true ? 1 : 0
 
   statement {

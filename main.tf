@@ -128,7 +128,7 @@ resource "aws_security_group_rule" "letsencrypt" {
   from_port         = 80
   to_port           = 80
   protocol          = "tcp"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = ["0.0.0.0/0"] #tfsec:ignore:AWS006
   ipv6_cidr_blocks  = ["::/0"]
   security_group_id = aws_security_group.jitsi.id
 }
@@ -187,7 +187,7 @@ resource "aws_security_group_rule" "egress" {
   from_port         = 0
   to_port           = 0
   protocol          = "-1"
-  cidr_blocks       = ["0.0.0.0/0"]
+  cidr_blocks       = ["0.0.0.0/0"] #tfsec:ignore:AWS007
   ipv6_cidr_blocks  = ["::/0"]
   security_group_id = aws_security_group.jitsi.id
 }
@@ -300,7 +300,9 @@ resource "aws_autoscaling_group" "jitsi" {
 # --------------------------------------------------------------------------
 # SNS Topic
 # --------------------------------------------------------------------------
-resource "aws_sns_topic" "jitsi" {
+resource "aws_sns_topic" "jitsi" { #tfsec:ignore:AWS016
+  # TODO: add encrypted SNS topic (+ test)
+  # kms_master_key_id = "alias/aws/sns"
   name = var.name
 
   tags = local.tags
