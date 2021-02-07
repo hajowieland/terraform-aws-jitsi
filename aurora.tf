@@ -37,7 +37,7 @@ resource "aws_security_group" "aurora" {
     from_port   = 3306
     to_port     = 3306
     protocol    = "tcp"
-    cidr_blocks = data.aws_subnet.subnet.*.cidr_block
+    cidr_blocks = var.vpc_id == "" ? aws_subnet.public.*.cidr_block : data.aws_subnet.subnet.*.cidr_block
   }
 
   egress {
@@ -85,7 +85,7 @@ resource "aws_db_subnet_group" "default" {
   count = var.db_subnet_group_name == null ? 1 : 0
 
   name       = "${var.name}-public"
-  subnet_ids = var.public_subnet_ids
+  subnet_ids = var.public_subnet_ids == [""] ? aws_subnet.public.*.id : var.public_subnet_ids
 
   tags = local.tags
 }

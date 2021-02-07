@@ -28,10 +28,10 @@ data "aws_ami" "ubuntu" {
 # Get Subnet CIDRs
 # --------------------------------------------------------------------------
 data "aws_subnet" "subnet" {
-  count = var.public_subnet_ids == [""] ? var.number_azs : length(var.public_subnet_ids)
+  count = var.vpc_id == "" ? 0 : length(var.public_subnet_ids)
 
-  id     = var.public_subnet_ids == [""] ? aws_subnet.public[count.index].id : var.public_subnet_ids[count.index]
-  vpc_id = var.vpc_id == "" ? aws_vpc.vpc.id : var.vpc_id
+  id     = var.public_subnet_ids[count.index]
+  vpc_id = var.vpc_id
 }
 
 # --------------------------------------------------------------------------
@@ -80,14 +80,16 @@ resource "aws_key_pair" "jitsi" {
   count = var.key_pair_name == null ? 1 : 0
 
   key_name   = var.name
-  public_key = tls_private_key.jitsi[0].public_key_openssh
+  public_key = var.ssh_public_key_path == "" ? tls_private_key.jitsi[0].public_key_openssh : file(var.ssh_public_key_path)
+
+  tags = local.tags
 }
 
 # --------------------------------------------------------------------------
 # OPTIONAL: SSM Parameter Store
 # --------------------------------------------------------------------------
 resource "aws_ssm_parameter" "jitsi_ssm_key_pair_private" {
-  count = var.key_pair_name == null ? 1 : 0
+  count = var.key_pair_name == null && var.ssh_public_key_path == "" ? 1 : 0
 
   name        = "/jitsi/id_rsa"
   description = "SSH Private Key for Jitsi - ${var.name}"
@@ -99,7 +101,7 @@ resource "aws_ssm_parameter" "jitsi_ssm_key_pair_private" {
 }
 
 resource "aws_ssm_parameter" "jitsi_ssm_key_pair_public" {
-  count = var.key_pair_name == null ? 1 : 0
+  count = var.key_pair_name == null && var.ssh_public_key_path == "" ? 1 : 0
 
   name        = "/jitsi/id_rsa.pub"
   description = "SSH Public Key for Jitsi - ${var.name}"
@@ -194,7 +196,7 @@ resource "aws_security_group_rule" "udp" {
 }
 
 resource "aws_security_group_rule" "udp6" {
-  for_each = var.jitsi_cidrs_ipv4
+  for_each = var.jitsi_cidrs_ipv6
 
   description       = "UDP IPv6: ${each.key}"
   type              = "ingress"
@@ -315,7 +317,7 @@ resource "aws_autoscaling_group" "jitsi" {
     version = "$Latest"
   }
 
-  vpc_zone_identifier = var.public_subnet_ids == [""] ? aws_subnet.public.*.id : var.public_subnet_ids
+  vpc_zone_identifier = var.vpc_id == "" ? aws_subnet.public.*.id : var.public_subnet_ids
   enabled_metrics     = var.asg_metrics
 
   tags = local.tags_as_list_of_maps

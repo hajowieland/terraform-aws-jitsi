@@ -24,6 +24,12 @@ variable "aws_region" {
   type        = string
 }
 
+variable "ssh_public_key_path" {
+  description = "SSH Public Key path on your workstation (e.g. `/home/user/.ssh/id_rsa.pub`)"
+  type        = string
+  default     = ""
+}
+
 # --------------------------------------------------------------------------
 # VPC
 # --------------------------------------------------------------------------
