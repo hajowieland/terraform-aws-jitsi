@@ -225,12 +225,18 @@ variable "timezone" {
 }
 
 variable "public_zone_id" {
-  description = "Route53 Public Hosted Zone ID to create Bastion Host DNS records"
+  description = "Route53 Public Hosted Zone ID to create public Jitsi DNS records"
   type        = string
 }
 
+variable "private_record" {
+  description = "Enable (1) / Disable (0) creation of private Route53 records"
+  type        = string
+  default     = "0"
+}
+
 variable "private_zone_id" {
-  description = "Route53 Private Hosted Zone ID to create Bastion Host DNS records"
+  description = "Route53 Private Hosted Zone ID to create private Jitsi DNS records"
   type        = string
 }
 

@@ -266,6 +266,7 @@ resource "aws_launch_template" "jitsi" {
     log_group_name    = aws_cloudwatch_log_group.jitsi.id
     name              = var.name
     public_zone_id    = var.public_zone_id
+    private_record    = var.private_record
     private_zone_id   = var.private_zone_id
     timezone          = var.timezone
   }))

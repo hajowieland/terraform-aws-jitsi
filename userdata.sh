@@ -375,7 +375,10 @@ associate_eip
 set_hostname_timezone
 sleep 5
 update_public_route53
-update_private_route53
+
+if [ "${private_record}" == "1" ]; then
+  update_private_route53
+fi
 create_awscli_conf
 create_awslogs_conf
 install_coudwatchagent
