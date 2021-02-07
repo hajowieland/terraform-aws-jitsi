@@ -233,7 +233,7 @@ prosodyctl adduser hans@meet.example.com
 | number\_azs | Number of AWS Availability Zones to use for every subnet | `number` | `3` | no |
 | preferred\_maintenance\_window | Weekly time range during which system changes can occur (in UTC - e.g. `wed:04:00-wed:04:30` => Wednesday between 04:00-04:30) | `string` | `"sun:02:30-sun:03:30"` | no |
 | private\_record | Enable (1) / Disable (0) creation of private Route53 records | `string` | `"0"` | no |
-| private\_zone\_id | Route53 Private Hosted Zone ID to create private Jitsi DNS records | `string` | n/a | yes |
+| private\_zone\_id | Route53 Private Hosted Zone ID to create private Jitsi DNS records | `string` | `""` | no |
 | public\_subnet\_ids | Existing Subnet IDs for AutoScalingGroup to create Jitsi Host into (=> public) - leave empty to create new subnets | `list(string)` | <pre>[<br>  ""<br>]</pre> | no |
 | public\_zone\_id | Route53 Public Hosted Zone ID to create public Jitsi DNS records | `string` | n/a | yes |
 | retain\_count | How many snapshots to keep (valid value: integeger between `1` and `1000`) | `string` | `7` | no |

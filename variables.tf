@@ -238,6 +238,7 @@ variable "private_record" {
 variable "private_zone_id" {
   description = "Route53 Private Hosted Zone ID to create private Jitsi DNS records"
   type        = string
+  default     = ""
 }
 
 
