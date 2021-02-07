@@ -223,7 +223,8 @@ prosodyctl adduser hans@meet.example.com
 | enable\_cross\_account | Enable cross-account with IAM Role to assume by UserData for updating of Route53 records (Valid values: `1` => Enable, `0` => Disable) | `string` | `"0"` | no |
 | enable\_dlm | Enable / Disable Data Lifecycle Manager for automatic EBS Snapshots | `bool` | `true` | no |
 | host | The host part of the Route53 A record referencing the Jitsi DNS (e.g. `jitsi` for `jitsi.example.com`) | `string` | `"meet"` | no |
-| jitsi\_cidrs | IPV4 CIDRs to allow for Jitsi access | `map(string)` | <pre>{<br>  "ALL-IPv4": "0.0.0.0/0"<br>}</pre> | no |
+| jitsi\_cidrs\_ipv4 | IPV4 CIDRs to allow for Jitsi access | `map(string)` | <pre>{<br>  "ALL-IPv4": "0.0.0.0/0"<br>}</pre> | no |
+| jitsi\_cidrs\_ipv6 | IPV6 CIDRs to allow for Jitsi access | `map(string)` | <pre>{<br>  "ALL-IPv6": "::/0"<br>}</pre> | no |
 | key\_pair\_name | Name of pre-existing AWS Key Pair name to associate with Jitsi | `string` | `null` | no |
 | kms\_key | The ARN, ID or AliasARN for the KMS encryption key (RDS encryption-at-rest) | `string` | `null` | no |
 | letsencrypt\_email | E-Mail address for LetsEncrypt | `string` | n/a | yes |

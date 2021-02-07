@@ -233,11 +233,19 @@ variable "ssh_cidrs" {
   default     = {}
 }
 
-variable "jitsi_cidrs" {
+variable "jitsi_cidrs_ipv4" {
   description = "IPV4 CIDRs to allow for Jitsi access"
   type        = map(string)
   default = {
     "ALL-IPv4" = "0.0.0.0/0"
+  }
+}
+
+variable "jitsi_cidrs_ipv6" {
+  description = "IPV6 CIDRs to allow for Jitsi access"
+  type        = map(string)
+  default = {
+    "ALL-IPv6" = "::/0"
   }
 }
 

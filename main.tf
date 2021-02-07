@@ -158,7 +158,7 @@ resource "aws_security_group_rule" "ssh_workstation" {
 }
 
 resource "aws_security_group_rule" "tcp" {
-  for_each = var.jitsi_cidrs
+  for_each = var.jitsi_cidrs_ipv4
 
   description       = "TCP: ${each.key}"
   type              = "ingress"
@@ -169,8 +169,20 @@ resource "aws_security_group_rule" "tcp" {
   security_group_id = aws_security_group.jitsi.id
 }
 
+resource "aws_security_group_rule" "tcp6" {
+  for_each = var.jitsi_cidrs_ipv6
+
+  description       = "TCP IPv6: ${each.key}"
+  type              = "ingress"
+  from_port         = 443
+  to_port           = 443
+  protocol          = "tcp"
+  ipv6_cidr_blocks  = [each.value]
+  security_group_id = aws_security_group.jitsi.id
+}
+
 resource "aws_security_group_rule" "udp" {
-  for_each = var.jitsi_cidrs
+  for_each = var.jitsi_cidrs_ipv4
 
   description       = "UDP: ${each.key}"
   type              = "ingress"
@@ -178,6 +190,18 @@ resource "aws_security_group_rule" "udp" {
   to_port           = 10000
   protocol          = "udp"
   cidr_blocks       = [each.value]
+  security_group_id = aws_security_group.jitsi.id
+}
+
+resource "aws_security_group_rule" "udp6" {
+  for_each = var.jitsi_cidrs_ipv4
+
+  description       = "UDP IPv6: ${each.key}"
+  type              = "ingress"
+  from_port         = 10000
+  to_port           = 10000
+  protocol          = "udp"
+  ipv6_cidr_blocks  = [each.value]
   security_group_id = aws_security_group.jitsi.id
 }
 
@@ -228,7 +252,7 @@ resource "aws_launch_template" "jitsi" {
     }
   }
 
-  user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
+  user_data = base64encode(templatefile("${path.module}/userdata.sh", {
     arn_role          = var.arn_role
     aws_region        = var.aws_region
     cross_account     = var.enable_cross_account
