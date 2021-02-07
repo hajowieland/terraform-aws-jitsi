@@ -14,7 +14,7 @@ data "aws_ami" "ubuntu" {
 
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-${var.ubuntu_release}-amd64-server-*"]
   }
 
   filter {
@@ -51,7 +51,8 @@ locals {
   tags = merge(
     var.tags,
     map(
-      "Name", var.name
+      "Name", var.name,
+      "Owner", var.owner
     )
   )
   tags_as_list_of_maps = flatten([
