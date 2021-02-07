@@ -28,10 +28,10 @@ data "aws_ami" "ubuntu" {
 # Get Subnet CIDRs
 # --------------------------------------------------------------------------
 data "aws_subnet" "subnet" {
-  count = length(var.public_subnet_ids)
+  count = var.public_subnet_ids == [""] ? var.number_azs : length(var.public_subnet_ids)
 
-  id     = var.public_subnet_ids[count.index]
-  vpc_id = var.vpc_id
+  id     = var.public_subnet_ids == [""] ? aws_subnet.public[count.index].id : var.public_subnet_ids[count.index]
+  vpc_id = var.vpc_id == "" ? aws_vpc.vpc.id : var.vpc_id
 }
 
 # --------------------------------------------------------------------------
@@ -117,7 +117,7 @@ resource "aws_ssm_parameter" "jitsi_ssm_key_pair_public" {
 resource "aws_security_group" "jitsi" {
   name_prefix = "${var.name}-"
   description = "Jitsi Meet"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc_id == "" ? aws_vpc.vpc.id : var.vpc_id
 
   tags = local.tags
 }
@@ -314,7 +314,7 @@ resource "aws_autoscaling_group" "jitsi" {
     version = "$Latest"
   }
 
-  vpc_zone_identifier = var.public_subnet_ids
+  vpc_zone_identifier = var.public_subnet_ids == [""] ? aws_subnet.public.*.id : var.public_subnet_ids
   enabled_metrics     = var.asg_metrics
 
   tags = local.tags_as_list_of_maps

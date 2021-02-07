@@ -24,14 +24,37 @@ variable "aws_region" {
   type        = string
 }
 
+# --------------------------------------------------------------------------
+# VPC
+# --------------------------------------------------------------------------
+variable "ipv6" {
+  description = "Enable / Disable IPv6 support (VPC, Routes)."
+  type        = bool
+  default     = false
+}
+
 variable "vpc_id" {
-  description = "ID of VPC"
+  description = "ID of existing VPC - leave empty to create new VPC"
   type        = string
+  default     = ""
+}
+
+variable "vpc_cidr" {
+  description = "AWS VPC CIDR network block (e.g. `10.0.0.0/16`)"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "number_azs" {
+  description = "Number of AWS Availability Zones to use for every subnet"
+  type        = number
+  default     = 3
 }
 
 variable "public_subnet_ids" {
-  description = "AutoScalingGroup Subnet IDs to create Jitsi Host into (=> public)"
+  description = "Existing Subnet IDs for AutoScalingGroup to create Jitsi Host into (=> public) - leave empty to create new subnets"
   type        = list(string)
+  default     = [""]
 }
 
 variable "enable_cross_account" {
