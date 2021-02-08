@@ -35,16 +35,6 @@ data "aws_subnet" "subnet" {
 }
 
 # --------------------------------------------------------------------------
-# OPTIONAL: Get workstation IPv4
-# --------------------------------------------------------------------------
-data "http" "workstation_external_ip" {
-  count = var.allow_workstation_ipv4 == true ? 1 : 0
-
-  url = "http://ipv4.icanhazip.com"
-}
-
-
-# --------------------------------------------------------------------------
 # Locals
 # --------------------------------------------------------------------------
 locals {
@@ -62,7 +52,6 @@ locals {
     }, { propagate_at_launch = "true" })
   ])
   account_id                = var.aws_account_id == "" ? data.aws_caller_identity.current.account_id : var.aws_account_id
-  workstation_external_cidr = "${chomp(data.http.workstation_external_ip[0].body)}/32"
 }
 
 
@@ -145,18 +134,6 @@ resource "aws_security_group_rule" "ssh" {
   security_group_id = aws_security_group.jitsi.id
 }
 
-resource "aws_security_group_rule" "ssh_workstation" {
-  count = var.allow_workstation_ipv4 == true ? 1 : 0
-
-  description       = "SSH: Workstation IPv4"
-  type              = "ingress"
-  from_port         = 22
-  to_port           = 22
-  protocol          = "tcp"
-  cidr_blocks       = [local.workstation_external_cidr]
-  security_group_id = aws_security_group.jitsi.id
-}
-
 resource "aws_security_group_rule" "tcp" {
   for_each = var.jitsi_cidrs
 
@@ -229,21 +206,28 @@ resource "aws_launch_template" "jitsi" {
   }
 
   user_data = base64encode(templatefile("${path.module}/userdata.tpl", {
-    arn_role          = var.arn_role
-    aws_region        = var.aws_region
-    cross_account     = var.enable_cross_account
-    db_host           = aws_rds_cluster.aurora.endpoint
-    db_name           = aws_rds_cluster.aurora.database_name
-    db_user           = aws_rds_cluster.aurora.master_username
-    db_password       = aws_rds_cluster.aurora.master_password
-    domain            = var.domain
-    host              = var.host
-    letsencrypt_email = var.letsencrypt_email
-    log_group_name    = aws_cloudwatch_log_group.jitsi.id
-    name              = var.name
-    public_zone_id    = var.public_zone_id
-    private_zone_id   = var.private_zone_id
-    timezone          = var.timezone
+    arn_role                 = var.arn_role
+    aws_region               = var.aws_region
+    cross_account            = var.enable_cross_account
+    db_host                  = aws_rds_cluster.aurora.endpoint
+    db_name                  = aws_rds_cluster.aurora.database_name
+    db_user                  = aws_rds_cluster.aurora.master_username
+    db_password              = aws_rds_cluster.aurora.master_password
+    domain                   = var.domain
+    host                     = var.host
+    letsencrypt_email        = var.letsencrypt_email
+    log_group_name           = aws_cloudwatch_log_group.jitsi.id
+    name                     = var.name
+    public_zone_id           = var.public_zone_id
+    private_zone_id          = var.private_zone_id
+    timezone                 = var.timezone
+    prosody_user             = var.jitsi_admin_username
+    prosody_password         = var.jitsi_admin_password
+    enable_welcome_page      = var.enable_welcome_page
+    default_background_color = var.default_background_color
+    watermark_url            = var.watermark_url
+    language_detection       = var.language_detection
+    default_language         = var.default_language
   }))
 
   monitoring {

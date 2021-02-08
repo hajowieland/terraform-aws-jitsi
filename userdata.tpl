@@ -243,6 +243,10 @@ EOT
   echo "org.jitsi.jicofo.auth.URL=XMPP:$HOSTNAME" >> /etc/jitsi/jicofo/sip-communicator.properties
 }
 
+function add_user() {
+  prosodyctl register ${prosody_user} $HOSTNAME ${prosody_password}
+}
+
 function configure_nginx() {
   cp /usr/share/jitsi-meet/interface_config.js /etc/jitsi/meet/$HOSTNAME-interface_config.js
   sed -i "s|^}|\    location ^~ /etherpad/ {\n        proxy_pass http://localhost:9001/;\n        proxy_set_header X-Forwarded-For \$remote_addr;\n        proxy_buffering off;\n        proxy_set_header       Host \$host;\n    }\n}|g" /etc/nginx/sites-enabled/$HOSTNAME.conf
@@ -251,6 +255,23 @@ function configure_nginx() {
 
 function configure_meet() {
   sed -i "/makeJsonParserHappy.*/i\    etherpad_base: 'https://$HOSTNAME/etherpad/p/'", /etc/jitsi/meet/$HOSTNAME-config.js
+  sed -i "/defaultLanguage/c\    defaultLanguage: '${default_language}'", /etc/jitsi/meet/$HOSTNAME-config.js
+  sed -i "/enableWelcomePage/c\    enableWelcomePage: ${enable_welcome_page}," /etc/jitsi/meet/$HOSTNAME-config.js
+  # enable layer suspension to bring down client CPU usage: https://github.com/jitsi/jitsi-meet/issues/5464#issuecomment-698996303
+  sed -i "/enableLayerSuspension/c\    enableLayerSuspension: true," /etc/jitsi/meet/$HOSTNAME-config.js
+
+  sed -i "/DEFAULT_BACKGROUND/c\    DEFAULT_BACKGROUND: '${default_background_color}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
+  sed -i "/DEFAULT_LOGO_URL/c\    DEFAULT_LOGO_URL: '${watermark_url}'," /etc/jitsi/meet/$HOSTNAME-interface_config.js
+  sed -i "/LANG_DETECTION/c\    LANG_DETECTION: ${language_detection}," /etc/jitsi/meet/$HOSTNAME-interface_config.js
+}
+
+function configure_videobridge_stats() {
+  # this makes the stats call available to clients outside this machine
+  # make sure that you configure the security groups correctly
+  sed -i "/JVB_OPTS/c\JVB_OPTS=\"--apis=rest,xmpp\"" /etc/jitsi/videobridge/config
+  echo "org.jitsi.videobridge.ENABLE_STATISTICS=true" >> /etc/jitsi/videobridge/sip-communicator.properties
+  echo "org.jitsi.videobridge.STATISTICS_TRANSPORT=muc,colibri" >> /etc/jitsi/videobridge/sip-communicator.properties
+  echo "org.jitsi.videobridge.rest.private.jetty.host=${host}.${domain}" >> /etc/jitsi/videobridge/sip-communicator.properties
 }
 
 function create_awscli_conf() {
@@ -391,9 +412,11 @@ letsencrypt
 configure_authentication
 configure_nginx
 configure_meet
+configure_videobridge_stats
 restart_services
 sleep 5
 create_mysql_client_config
 convert_datastores
+add_user
 restart_services
 # END
