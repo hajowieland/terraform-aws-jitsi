@@ -95,8 +95,8 @@ module "jitsi" {
 
   # If you want to allow other SSH IPv4 CIDRs (in addition to your workstation's IPV4 address):
   ssh_cidrs = {
-    "127.0.0.1/32"  = "first-ip-to-allow",
-    "127.0.0.2/32"  = "second-ip-to-allow"
+    "first-ip-to-allow"  = "127.0.0.1/32",
+    "second-ip-to-allow"  = "127.0.0.2/32"
   }
 }
 ```
@@ -105,31 +105,6 @@ module "jitsi" {
 ### Cross-account
 
 ✔ Cross-account for Route53 records
-
-module "jitsi" {
-#source  = "hajowieland/jitsi/aws"
-#version = "2.0.0"
-source = "git::https://github.com/hajowieland/terraform-aws-jitsi.git"
-
-name   = "jitsi-meet"
-owner = "hajo"
-
-host   = "meet"
-domain = "ventx.de"
-# will result in FQDN => meet.ventx.de
-
-aws_region = "eu-central-1"
-ec2_instance_type = "c5n.large"
-
-public_zone_id  = "ZM0NWREIU0CO0" # ventx.de
-private_zone_id = "Z03124422L44BK2YO41V1" # ventx.de
-
-letsencrypt_email = "hans-joerg@ventx.de"
-
-ssh_cidrs = {
-"95.90.197.230/32"  = "hajo-home"
-}
-}
 
 ```hcl
 module "jitsi" {
