@@ -3,6 +3,11 @@ output "fqdn" {
   value       = "${var.host}.${var.domain}"
 }
 
+output "eip" {
+  description = "Elastic IP address for Jitsi-Meet (will be assigned in UserData and can take a few moments to get assigned"
+  value       = aws_eip.eip.public_ip
+}
+
 output "endpoint" {
   description = "Endpoint for RDS Aurora cluster"
   value       = aws_rds_cluster.aurora.endpoint

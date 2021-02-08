@@ -1,6 +1,6 @@
 # terraform-aws-jitsi
 
-This repository contains Terraform code to create an Jitsi Meet instance on AWS backed by an RDS Aurora Serverless database for authentication. 
+This repository contains Terraform code to create an Jitsi Meet instance on AWS backed by an RDS Aurora Serverless database for authentication with Prometheus monitoring and Grafana dashboards. 
 
 <div align="center">
 <img src=https://i.imgur.com/tmgNxtN.png" width="200" height="200">
@@ -9,8 +9,6 @@ This repository contains Terraform code to create an Jitsi Meet instance on AWS 
 <p><strong>Blog Post:</strong></p>
 <p>https://napo.io/posts/jitsi-on-aws-with-terraform/</p>
 </div>
-
-
 
 
 
@@ -45,23 +43,26 @@ You need the following before deploying this Terraform module:
 * ✅ Jitsi Meet (Ubuntu 18.04)
   * ✅ Authentication (Users need to be authenticated to create new conferences) + Guest access (can only join existing conferences)
   * ✅ LetsEncrypt certificate for HTTPS
-  * ✅ Collaborative working on a shared document during Jitsi conference ([etherpad-lite](https://github.com/ether/etherpad-lite)) 
+  * ✅ Collaborative work on a shared document during Jitsi conference ([etherpad-lite](https://github.com/ether/etherpad-lite)) 
   * ✅ SQL Database for Jitsi authorized accounts
+* ✅ Prometheus, [jitsi-meet-exporter](https://github.com/systemli/prometheus-jitsi-meet-exporter), Grafana, Dashboards
 * ✅ Aurora Serverless
   * ✅ MySQL
-  * ✅ Can scale down to 0 to reduce costs
+  * ✅ Can scale down to 0 to reduce costs €€€
   * ❌ PostgreSQL _(can't yet scale down to zero)_
 * ✅ AutoScalingGroup
   * ✅ ASG notifications (+ SNS Topic)
   * ❌ Mulitple EC2 instances (ASG > 1)
 * ✅ CloudWatch Logs (+ CloudWatch Agent)
-* ✅ Route53 Public & Private records
+* ✅ Route53 Public & _(OPTIONAL) Private records_
   * ✅ _OPTIONAL:_ Cross-Account for Public & Private records
 * SecurityGroup
   * ✅ Allow SSH by workstation IPv4 (can be disabled)
   * ✅ Add other allowed IPv4 CIDRs for SSH
   * ✅ Restrict Jitsi access CIDRs (Default: not restricted)
+* ✅ _OPTIONAL:_ Create VPC and subnets (Default: true)
 * ✅ _OPTIONAL:_ AWS Key Pair (Default: true)
+  * ✅ _OPTIONAL:_ Use your workstation's public SSH Key (Default: false)
 * ✅ _OPTIONAL:_ SSM Parameters for AWS Key Pair (Default: true)
 * ✅ _OPTIONAL:_ Automatic EBS Snapshots via Data Lifecycle Manager (Default: true)
 
@@ -74,10 +75,10 @@ You need the following before deploying this Terraform module:
 
 ✔ Allow additional CIDRs (+ your workstation's IPV4 CIDR) for SSH access
 
-```
+```hcl
 module "jitsi" {
   source  = "hajowieland/jitsi/aws"
-  version = "1.0.0"
+  version = "2.0.0"
 
   aws_region = "eu-central-1"
 
@@ -86,16 +87,13 @@ module "jitsi" {
   domain = "example.com" # should match public and private hosted zone
   # will result in FQDN => meet.example.com
 
-  ec2_instance_type = "t3a.large"
-  vpc_id            = "vpc-123"
-  public_subnet_ids = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
+  ec2_instance_type = "c5n.large"
   
   # If the Route53 zones are in a different AWS Account:
   enable_cross_account = "1"
   arn_role             = "arn:aws:iam::other-account-id:role/route53-jitsi-other-account"
 
   public_zone_id  = "Z0123publiczone"
-  private_zone_id = "Z456privatezone
   
   letsencrypt_email = "mail@example.com"
 
@@ -109,14 +107,13 @@ module "jitsi" {
 
 ### MySQL with one account
 
-✔ Cross-account for Route53 records
-
+✔ Use existing VPC and public subnets
 ✔ Only allow your workstation's IPV4 CIDR for SSH access
 
-```
+```hcl
 module "jitsi" {
   source     = "hajowieland/jitsi/aws"
-  version    = "1.0.0"
+  version    = "2.0.0"
 
   aws_region = "eu-west-1"
 
@@ -132,7 +129,6 @@ module "jitsi" {
   public_subnet_ids = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
   
   public_zone_id  = "Z0819publiczone"
-  private_zone_id = "Z134rivatezone
   
   letsencrypt_email = "mail@example.com"
 }
@@ -166,16 +162,16 @@ prosodyctl adduser hans@meet.example.com
 
 ## Changelog
 
-* 19/04/2020: Initial commit 🚀
+* xx/02/2020: Version 2.0
+* 19/04/2020: Initial commit 1.0 🚀
 
 
 ## TODO
 
-* Enable SG restriction of IPv6 subnets, too
 * Enable Clustering with multiple jvb-videobridges for high availability and load balancing
 * Aurora optional so user can provide pre-existing Aurora DB
 * Add PostgreSQL even if it does not support scaling down to zero
-* Create Terraform null_resource for destroy to delete Route53 records
+* Create Terraform null_resource for deleting Route53 records created in UserData
 
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
@@ -183,20 +179,20 @@ prosodyctl adduser hans@meet.example.com
 
 | Name | Version |
 |------|---------|
-| terraform | ~> 0.12 |
-| aws | ~> 2.40 |
-| http | ~> 1.2 |
-| random | ~> 2.2 |
-| tls | ~> 2.1 |
+| terraform | ~> 0.14 |
+| aws | ~> 3.27 |
+| http | ~> 2.0 |
+| random | ~> 3.0 |
+| tls | ~> 3.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| aws | ~> 2.40 |
-| http | ~> 1.2 |
-| random | ~> 2.2 |
-| tls | ~> 2.1 |
+| aws | ~> 3.27 |
+| http | ~> 2.0 |
+| random | ~> 3.0 |
+| tls | ~> 3.0 |
 
 ## Inputs
 
@@ -226,15 +222,19 @@ prosodyctl adduser hans@meet.example.com
 | ipv6 | Enable / Disable IPv6 support (VPC, Routes). | `bool` | `false` | no |
 | jitsi\_cidrs\_ipv4 | IPV4 CIDRs to allow for Jitsi access | `map(string)` | <pre>{<br>  "ALL-IPv4": "0.0.0.0/0"<br>}</pre> | no |
 | jitsi\_cidrs\_ipv6 | IPV6 CIDRs to allow for Jitsi access | `map(string)` | <pre>{<br>  "ALL-IPv6": "::/0"<br>}</pre> | no |
+| jitsi\_meet\_exporter\_version | Prometheus jitsi-meet-exporter version to install | `string` | `"1.1.3"` | no |
 | key\_pair\_name | Name of pre-existing AWS Key Pair name to associate with Jitsi | `string` | `null` | no |
 | kms\_key | The ARN, ID or AliasARN for the KMS encryption key (RDS encryption-at-rest) | `string` | `null` | no |
 | letsencrypt\_email | E-Mail address for LetsEncrypt | `string` | n/a | yes |
+| monitoring | Enable (1) / Disable (0) Monitoring with Prometheus, Prometheus Exporter, Grafana | `string` | `"1"` | no |
+| monitoring\_cidrs | IPV4 CIDRs to allow for Monitoring (Grafana) access | `map(string)` | `{}` | no |
 | name | Name for all resources (preferably generated by terraform-null-label `module.id`) | `string` | `"jitsi-meet"` | no |
 | number\_azs | Number of AWS Availability Zones to use for every subnet | `number` | `3` | no |
 | owner | Tag 'Owner' to be used for all resources | `string` | n/a | yes |
 | preferred\_maintenance\_window | Weekly time range during which system changes can occur (in UTC - e.g. `wed:04:00-wed:04:30` => Wednesday between 04:00-04:30) | `string` | `"sun:02:30-sun:03:30"` | no |
 | private\_record | Enable (1) / Disable (0) creation of private Route53 records | `string` | `"0"` | no |
 | private\_zone\_id | Route53 Private Hosted Zone ID to create private Jitsi DNS records | `string` | `""` | no |
+| prometheus\_retention | Prometheus TSDB retention time (e.g. `15d` --> 15 days, `1m` --> 1 month) | `string` | `"35d"` | no |
 | public\_subnet\_ids | Existing Subnet IDs for AutoScalingGroup to create Jitsi Host into (=> public) - leave empty to create new subnets | `list(string)` | <pre>[<br>  ""<br>]</pre> | no |
 | public\_zone\_id | Route53 Public Hosted Zone ID to create public Jitsi DNS records | `string` | n/a | yes |
 | retain\_count | How many snapshots to keep (valid value: integeger between `1` and `1000`) | `string` | `7` | no |
@@ -261,6 +261,7 @@ prosodyctl adduser hans@meet.example.com
 
 | Name | Description |
 |------|-------------|
+| eip | Elastic IP address for Jitsi-Meet (will be assigned in UserData and can take a few moments to get assigned |
 | endpoint | Endpoint for RDS Aurora cluster |
 | fqdn | FQDN of Jitsi-Meet |
 | instance\_profile\_arn | ARN of EC2 Instance Profile |

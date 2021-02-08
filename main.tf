@@ -71,7 +71,7 @@ locals {
 # OPTIONAL: Generate secure RSA Key Pair
 # --------------------------------------------------------------------------
 resource "tls_private_key" "jitsi" {
-  count = var.key_pair_name == null ? 1 : 0
+  count = var.key_pair_name == null && var.ssh_public_key_path == "" ? 1 : 0
 
   algorithm = "RSA"
   rsa_bits  = 4096
@@ -155,6 +155,31 @@ resource "aws_security_group_rule" "ssh_workstation" {
   type              = "ingress"
   from_port         = 22
   to_port           = 22
+  protocol          = "tcp"
+  cidr_blocks       = [local.workstation_external_cidr]
+  security_group_id = aws_security_group.jitsi.id
+}
+
+
+resource "aws_security_group_rule" "monitoring" {
+  for_each = var.monitoring_cidrs
+
+  description       = "Monitoring: ${each.key}"
+  type              = "ingress"
+  from_port         = 3000
+  to_port           = 3000
+  protocol          = "tcp"
+  cidr_blocks       = [each.value]
+  security_group_id = aws_security_group.jitsi.id
+}
+
+resource "aws_security_group_rule" "monitoring_workstation" {
+  count = var.allow_workstation_ipv4 == true && var.monitoring == "1" ? 1 : 0
+
+  description       = "Grafana: Workstation IPv4"
+  type              = "ingress"
+  from_port         = 3000
+  to_port           = 3000
   protocol          = "tcp"
   cidr_blocks       = [local.workstation_external_cidr]
   security_group_id = aws_security_group.jitsi.id
@@ -256,22 +281,25 @@ resource "aws_launch_template" "jitsi" {
   }
 
   user_data = base64encode(templatefile("${path.module}/userdata.sh", {
-    arn_role          = var.arn_role
-    aws_region        = var.aws_region
-    cross_account     = var.enable_cross_account
-    db_host           = aws_rds_cluster.aurora.endpoint
-    db_name           = aws_rds_cluster.aurora.database_name
-    db_user           = aws_rds_cluster.aurora.master_username
-    db_password       = aws_rds_cluster.aurora.master_password
-    domain            = var.domain
-    host              = var.host
-    letsencrypt_email = var.letsencrypt_email
-    log_group_name    = aws_cloudwatch_log_group.jitsi.id
-    name              = var.name
-    public_zone_id    = var.public_zone_id
-    private_record    = var.private_record
-    private_zone_id   = var.private_zone_id
-    timezone          = var.timezone
+    arn_role                    = var.arn_role
+    aws_region                  = var.aws_region
+    cross_account               = var.enable_cross_account
+    db_host                     = aws_rds_cluster.aurora.endpoint
+    db_name                     = aws_rds_cluster.aurora.database_name
+    db_user                     = aws_rds_cluster.aurora.master_username
+    db_password                 = aws_rds_cluster.aurora.master_password
+    domain                      = var.domain
+    host                        = var.host
+    jitsi_meet_exporter_version = var.jitsi_meet_exporter_version
+    letsencrypt_email           = var.letsencrypt_email
+    log_group_name              = aws_cloudwatch_log_group.jitsi.id
+    monitoring                  = var.monitoring
+    name                        = var.name
+    public_zone_id              = var.public_zone_id
+    private_record              = var.private_record
+    private_zone_id             = var.private_zone_id
+    prometheus_retention        = var.prometheus_retention
+    timezone                    = var.timezone
   }))
 
   monitoring {

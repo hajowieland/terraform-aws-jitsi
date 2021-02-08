@@ -31,7 +31,7 @@ resource "random_string" "db_password" {
 resource "aws_security_group" "aurora" {
   name_prefix = "${var.name}-"
   description = "${var.name} - Aurora"
-  vpc_id      = var.vpc_id
+  vpc_id      = var.vpc_id == "" ? aws_vpc.vpc.id : var.vpc_id
 
   ingress {
     from_port   = 3306
@@ -44,7 +44,7 @@ resource "aws_security_group" "aurora" {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"] #tfsec:ignore:AWS009
+    cidr_blocks = var.vpc_id == "" ? aws_subnet.public.*.cidr_block : data.aws_subnet.subnet.*.cidr_block
   }
 
   tags = local.tags
@@ -85,7 +85,7 @@ resource "aws_db_subnet_group" "default" {
   count = var.db_subnet_group_name == null ? 1 : 0
 
   name       = "${var.name}-public"
-  subnet_ids = var.public_subnet_ids == [""] ? aws_subnet.public.*.id : var.public_subnet_ids
+  subnet_ids = var.vpc_id == "" ? aws_subnet.public.*.id : var.public_subnet_ids
 
   tags = local.tags
 }
@@ -141,7 +141,7 @@ resource "aws_rds_cluster" "aurora" {
 # SSM Parameter Store
 # --------------------------------------------------------------------------
 resource "aws_ssm_parameter" "username" {
-  name        = "/rds/${var.name}/username"
+  name        = "/jitsi/rds/${var.name}/username"
   value       = aws_rds_cluster.aurora.master_username
   description = "Aurora DB username for ${var.name}"
   type        = "SecureString"
@@ -151,7 +151,7 @@ resource "aws_ssm_parameter" "username" {
 }
 
 resource "aws_ssm_parameter" "password" {
-  name        = "/rds/${var.name}/password"
+  name        = "/jitsi/rds/${var.name}/password"
   value       = aws_rds_cluster.aurora.master_password
   description = "Aurora DB password for ${var.name}"
   type        = "SecureString"
@@ -161,7 +161,7 @@ resource "aws_ssm_parameter" "password" {
 }
 
 resource "aws_ssm_parameter" "endpoint" {
-  name        = "/rds/${var.name}/instance_endpoint"
+  name        = "/jitsi/rds/${var.name}/instance_endpoint"
   value       = aws_rds_cluster.aurora.endpoint
   description = "Aurora Endpoint for ${var.name}"
   type        = "String"
@@ -171,7 +171,7 @@ resource "aws_ssm_parameter" "endpoint" {
 }
 
 resource "aws_ssm_parameter" "database" {
-  name        = "/rds/${var.name}/database"
+  name        = "/jitsi/rds/${var.name}/database"
   value       = aws_rds_cluster.aurora.database_name
   description = "Aurora DB name for ${var.name}"
   type        = "String"

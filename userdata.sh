@@ -2,6 +2,100 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+
+# Install Prometheus, jitsi-meet-exporter, Grafana
+function monitoring() {
+  echo "Install Prometheus ..."
+  snap install prometheus
+  echo "Install Prometheus node-exporter ..."
+  snap install node-exporter --beta
+  cat << EOF > /var/snap/prometheus/32/prometheus.yml
+global:
+  scrape_interval:     15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+    - targets: ['127.0.0.1:9091']
+  - job_name: node
+    static_configs:
+    - targets: ['localhost:9100']
+  - job_name: jitsi
+    static_configs:
+    - targets: ['localhost:9888']
+EOF
+
+  sed -i "s/^ARGS=.*/ARGS=\"--web.listen-address="127.0.0.1:9091" --storage.tsdb.retention.time=${prometheus_retention}\"/g" /var/snap/prometheus/32/daemon_arguments
+  snap restart prometheus
+  echo "Install prometheus-jitsi-meet-exporter ..."
+  apt-get install software-properties-common -y
+
+  apt-add-repository --yes --update ppa:ansible/ansible
+  apt-get update
+  apt-get install ansible -y
+  ansible-galaxy install systemli.jitsi_meet_exporter
+  cat << EOF > /tmp/playbook.yml
+- hosts: localhost
+  connection: local
+  roles:
+     - { role: systemli.jitsi_meet_exporter }
+  vars:
+    prometheus_jitsi_meet_exporter_version: ${jitsi_meet_exporter_version}
+    prometheus_jitsi_meet_exporter_videobridge_url: http://localhost:8888/stats
+    prometheus_jitsi_meet_exporter_listen: :9888
+EOF
+
+  ansible-playbook /tmp/playbook.yml
+  echo "Enable Jitsi statistics ..."
+  sed -i "s/^JVB_OPTS=.*/JVB_OPTS=\"--apis=rest,xmpp\"/g" /etc/jitsi/videobridge/config
+  sed -i "s/^org.jitsi.videobridge.STATISTICS_TRANSPORT.*/org.jitsi.videobridge.STATISTICS_TRANSPORT=muc,colibri/g" /etc/jitsi/videobridge/sip-communicator.properties
+  echo "Install Grafana ..."
+  curl https://packages.grafana.com/gpg.key | sudo apt-key add -
+  add-apt-repository "deb https://packages.grafana.com/oss/deb stable main"
+  apt-get update && apt-get install grafana -y
+  systemctl daemon-reload
+  systemctl enable grafana-server
+  sed -i "s/^;protocol = http.*/protocol = https/g" /etc/grafana/grafana.ini
+  sed -i "s/^;cert_file =.*/cert_file = \/etc\/letsencrypt\/live\/$HOSTNAME\/cert.pem/g" /etc/grafana/grafana.ini
+  sed -i "s/^;cert_key =.*/cert_key = \/etc\/letsencrypt\/live\/$HOSTNAME\/privkey.pem/g" /etc/grafana/grafana.ini
+  usermod -G ssl-cert -a grafana
+  chown root:ssl-cert /etc/letsencrypt/live/$HOSTNAME/*
+  chmod 660 /etc/letsencrypt/live/$HOSTNAME/*
+  chmod 755 /etc/letsencrypt/live/
+  chmod 755 /etc/letsencrypt/archive/
+  cat << EOF > /etc/grafana/provisioning/datasources/prometheus.yaml
+apiVersion: 1
+datasources:
+- name: Prometheus
+  type: prometheus
+  url: http://127.0.0.1:9091/
+  access: proxy
+  isDefault: true
+EOF
+
+  chown root:grafana /etc/grafana/provisioning/datasources/prometheus.yaml
+  cat << EOF > /etc/grafana/provisioning/dashboards/files.yaml
+apiVersion: 1
+providers:
+- name: dashboards
+  type: file
+  updateIntervalSeconds: 60
+  options:
+    path: /etc/grafana/dashboards
+    foldersFromFilesStructure: true
+EOF
+
+  chown root:grafana /etc/grafana/provisioning/dashboards/files.yaml
+  mkdir -p /etc/grafana/dashboards
+  wget https://raw.githubusercontent.com/systemli/prometheus-jitsi-meet-exporter/master/dashboards/jitsi-meet-system.json -O /etc/grafana/dashboards/jitsi-meet-system.json
+  sed -i "s/\$${DS_PROMETHEUS}/Prometheus/g" /etc/grafana/dashboards/jitsi-meet-system.json
+  wget https://raw.githubusercontent.com/systemli/prometheus-jitsi-meet-exporter/master/dashboards/jitsi-meet.json -O /etc/grafana/dashboards/jitsi-meet.json
+  sed -i "s/\$${DS_PROMETHEUS}/Prometheus/g" /etc/grafana/dashboards/jitsi-meet.json
+  chown root:grafana /etc/grafana/dashboards/jitsi-meet-system.json
+  chown root:grafana /etc/grafana/dashboards/jitsi-meet.json
+  systemctl restart grafana-server
+}
 # Update all packages
 function update_system() {
   apt-get update
@@ -283,31 +377,6 @@ function create_awslogs_conf() {
             "log_stream_name": "{instance_id}/cloud-init-output.log"
           },
           {
-            "file_path": "/var/log/cloud-init.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/cloud-init.log"
-          },
-          {
-            "file_path": "/var/log/auth.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/auth.log"
-          },
-          {
-            "file_path": "/var/log/boot.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/boot.log"
-          },
-          {
-            "file_path": "/var/log/dpkg.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/dpkg.log"
-          },
-          {
-            "file_path": "/var/log/kern.log",
-            "log_group_name": "${log_group_name}",
-            "log_stream_name": "{instance_id}/kern.log"
-          },
-          {
             "file_path": "/var/log/jitsi/jicofo.log",
             "log_group_name": "${log_group_name}",
             "log_stream_name": "{instance_id}/jicofo.log"
@@ -368,14 +437,12 @@ function restart_services() {
   systemctl restart jitsi-videobridge2
 }
 
-
 # START
 update_system
 associate_eip
 set_hostname_timezone
 sleep 5
 update_public_route53
-
 if [ "${private_record}" == "1" ]; then
   update_private_route53
 fi
@@ -394,6 +461,9 @@ letsencrypt
 configure_authentication
 configure_nginx
 configure_meet
+if [ "${monitoring}" == "1" ]; then
+  monitoring
+fi
 restart_services
 sleep 5
 create_mysql_client_config

@@ -42,6 +42,24 @@ variable "ssh_public_key_path" {
   default     = ""
 }
 
+variable "monitoring" {
+  description = "Enable (1) / Disable (0) Monitoring with Prometheus, Prometheus Exporter, Grafana"
+  type        = string
+  default     = "1"
+}
+
+variable "prometheus_retention" {
+  description = "Prometheus TSDB retention time (e.g. `15d` --> 15 days, `1m` --> 1 month)"
+  type        = string
+  default     = "35d"
+}
+
+variable "jitsi_meet_exporter_version" {
+  description = "Prometheus jitsi-meet-exporter version to install"
+  type        = string
+  default     = "1.1.3"
+}
+
 # --------------------------------------------------------------------------
 # VPC
 # --------------------------------------------------------------------------
@@ -277,6 +295,12 @@ variable "key_pair_name" {
 
 variable "ssh_cidrs" {
   description = "IPV4 CIDRs to allow for SSH access"
+  type        = map(string)
+  default     = {}
+}
+
+variable "monitoring_cidrs" {
+  description = "IPV4 CIDRs to allow for Monitoring (Grafana) access"
   type        = map(string)
   default     = {}
 }
