@@ -166,6 +166,7 @@ prosodyctl adduser hans@meet.example.com
 
 ## Changelog
 
+* 08/02/2021: v1.1.0 (Thanks @leonardehrenfried )
 * 19/04/2020: Initial commit 🚀
 
 
