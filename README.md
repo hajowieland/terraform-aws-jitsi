@@ -69,9 +69,9 @@ You need the following before deploying this Terraform module:
 
 ## Usage
 
-### MySQL with cross-account
+### Simple
 
-✔ Cross-account for Route53 records
+✔ Create own VPC
 
 ✔ Allow additional CIDRs (+ your workstation's IPV4 CIDR) for SSH access
 
@@ -84,15 +84,11 @@ module "jitsi" {
 
   name   = "jitsi-meet"
   host   = "meet"
-  domain = "example.com" # should match public and private hosted zone
+  domain = "example.com" # should match public  hosted zone
   # will result in FQDN => meet.example.com
 
-  ec2_instance_type = "c5n.large"
+  ec2_instance_type = "t3a.large"
   
-  # If the Route53 zones are in a different AWS Account:
-  enable_cross_account = "1"
-  arn_role             = "arn:aws:iam::other-account-id:role/route53-jitsi-other-account"
-
   public_zone_id  = "Z0123publiczone"
   
   letsencrypt_email = "mail@example.com"
@@ -105,30 +101,89 @@ module "jitsi" {
 }
 ```
 
-### MySQL with one account
+
+### Cross-account
+
+✔ Cross-account for Route53 records
+
+module "jitsi" {
+#source  = "hajowieland/jitsi/aws"
+#version = "2.0.0"
+source = "git::https://github.com/hajowieland/terraform-aws-jitsi.git"
+
+name   = "jitsi-meet"
+owner = "hajo"
+
+host   = "meet"
+domain = "ventx.de"
+# will result in FQDN => meet.ventx.de
+
+aws_region = "eu-central-1"
+ec2_instance_type = "c5n.large"
+
+public_zone_id  = "ZM0NWREIU0CO0" # ventx.de
+private_zone_id = "Z03124422L44BK2YO41V1" # ventx.de
+
+letsencrypt_email = "hans-joerg@ventx.de"
+
+ssh_cidrs = {
+"95.90.197.230/32"  = "hajo-home"
+}
+}
+
+```hcl
+module "jitsi" {
+  source  = "hajowieland/jitsi/aws"
+  version = "2.0.0"
+
+  name   = "jitsi-meet"
+  owner = "johndoe"
+  
+  host   = "meet"
+  domain = "example.com" # should match public  hosted zone
+  # will result in FQDN => meet.example.com
+
+  ec2_instance_type = "c5n.large"
+  
+  # If the Route53 zones are in a different AWS Account:
+  enable_cross_account = "1"
+  arn_role             = "arn:aws:iam::other-account-id:role/route53-jitsi-other-account"
+
+  public_zone_id  = "Z0123publiczone"
+  
+  letsencrypt_email = "mail@example.com"
+}
+```
+
+### Existing VPC, additional SSH cidrs, different AWS Region
 
 ✔ Use existing VPC and public subnets
+
 ✔ Only allow your workstation's IPV4 CIDR for SSH access
+
+✔ Use Ireland eu-west-1 AWS Region
+
+✔ Create DNS records in Route53 Private Hosted Zone
 
 ```hcl
 module "jitsi" {
   source     = "hajowieland/jitsi/aws"
   version    = "2.0.0"
 
-  aws_region = "eu-west-1"
-
   name   = "jitsi-meet"
+  owner = "johndoe"
+  
   host   = "meet"
   domain = "example.com" # should match public and private hosted zone
   # will result in FQDN => meet.example.com
 
-  db_driver  = "postgresql" # Set this for Postgres
-
+  aws_region = "eu-west-1"
   ec2_instance_type = "t3a.medium"
   vpc_id            = "vpc-123"
   public_subnet_ids = ["subnet-id-1", "subnet-id-2", "subnet-id-3"]
   
   public_zone_id  = "Z0819publiczone"
+  private_zone_id = "Z123privatezoneid"
   
   letsencrypt_email = "mail@example.com"
 }
@@ -162,7 +217,7 @@ prosodyctl adduser hans@meet.example.com
 
 ## Changelog
 
-* xx/02/2020: Version 2.0
+* 08/02/2020: Version 2.0
 * 19/04/2020: Initial commit 1.0 🚀
 
 
